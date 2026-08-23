@@ -1,16 +1,25 @@
+import { useState } from "react";
 import { transactions } from "./data/transactions";
 import TransactionList from "./components/TransactionList";
 
 function App() {
-  const totalIncome = transactions
+  const [transactionList, setTransactionList] = useState(transactions);
+
+  const totalIncome = transactionList
     .filter((transaction) => transaction.type === "income")
     .reduce((total, transaction) => total + transaction.amount, 0);
 
-  const totalExpenses = transactions
+  const totalExpenses = transactionList
     .filter((transaction) => transaction.type === "expense")
     .reduce((total, transaction) => total + transaction.amount, 0);
 
   const balance = totalIncome - totalExpenses;
+
+  const handleDeleteTransaction = (id: string) => {
+    setTransactionList((currentTransactions) =>
+      currentTransactions.filter((transaction) => transaction.id !== id)
+    );
+  };
 
   return (
     <main>
@@ -30,7 +39,10 @@ function App() {
         </p>
       </section>
 
-      <TransactionList transactions={transactions} />
+      <TransactionList
+        transactions={transactionList}
+        onDelete={handleDeleteTransaction}
+      />
     </main>
   );
 }

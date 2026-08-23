@@ -2,9 +2,13 @@ import type { Transaction } from "../types/transaction";
 
 type TransactionListProps = {
     transactions: Transaction[];
+    onDelete: (id: string) => void;
 };
 
-function TransactionList({ transactions }: TransactionListProps) {
+function TransactionList({
+    transactions,
+    onDelete,
+}: TransactionListProps) {
     return (
         <ul>
             {transactions.map((transaction) => (
@@ -24,6 +28,13 @@ function TransactionList({ transactions }: TransactionListProps) {
                     <p>{transaction.type}</p>
                     <p>{transaction.category}</p>
                     <p>{transaction.date}</p>
+
+                    <button
+                        type="button"
+                        onClick={() => onDelete(transaction.id)}
+                    >
+                        Eliminar
+                    </button>
                 </li>
             ))}
         </ul>
