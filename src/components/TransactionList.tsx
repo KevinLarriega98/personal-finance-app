@@ -11,6 +11,10 @@ function TransactionList({
     onDelete,
     onEdit,
 }: TransactionListProps) {
+    if (transactions.length === 0) {
+        return <p>No hay transacciones</p>;
+    }
+
     return (
         <ul>
             {transactions.map((transaction) => (

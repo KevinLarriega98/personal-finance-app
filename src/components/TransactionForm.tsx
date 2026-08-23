@@ -3,14 +3,36 @@ import type { Transaction } from "../types/transaction";
 
 type TransactionFormProps = {
     onAddTransaction: (transaction: Transaction) => void;
+    onUpdateTransaction: (transaction: Transaction) => void;
+    transactionToEdit: Transaction | null;
+    onCancelEdit: () => void;
 };
 
-function TransactionForm({ onAddTransaction }: TransactionFormProps) {
-    const [description, setDescription] = useState("");
-    const [amount, setAmount] = useState("");
-    const [type, setType] = useState<Transaction["type"]>("expense");
-    const [category, setCategory] = useState("");
-    const [date, setDate] = useState("");
+function TransactionForm({
+    onAddTransaction,
+    onUpdateTransaction,
+    transactionToEdit,
+    onCancelEdit,
+}: TransactionFormProps) {
+    const [description, setDescription] = useState(
+        transactionToEdit?.description ?? ""
+    );
+
+    const [amount, setAmount] = useState(
+        transactionToEdit?.amount.toString() ?? ""
+    );
+
+    const [type, setType] = useState<Transaction["type"]>(
+        transactionToEdit?.type ?? "expense"
+    );
+
+    const [category, setCategory] = useState(
+        transactionToEdit?.category ?? ""
+    );
+
+    const [date, setDate] = useState(
+        transactionToEdit?.date ?? ""
+    );
 
     const handleSubmit = (event: SubmitEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -21,16 +43,29 @@ function TransactionForm({ onAddTransaction }: TransactionFormProps) {
             return;
         }
 
-        const newTransaction: Transaction = {
-            id: crypto.randomUUID(),
-            description,
-            amount: numericAmount,
-            type,
-            category,
-            date,
-        };
+        if (transactionToEdit) {
+            const updatedTransaction: Transaction = {
+                id: transactionToEdit.id,
+                description,
+                amount: numericAmount,
+                type,
+                category,
+                date,
+            };
 
-        onAddTransaction(newTransaction);
+            onUpdateTransaction(updatedTransaction);
+        } else {
+            const newTransaction: Transaction = {
+                id: crypto.randomUUID(),
+                description,
+                amount: numericAmount,
+                type,
+                category,
+                date,
+            };
+
+            onAddTransaction(newTransaction);
+        }
 
         setDescription("");
         setAmount("");
@@ -94,7 +129,15 @@ function TransactionForm({ onAddTransaction }: TransactionFormProps) {
                 required
             />
 
-            <button type="submit">Add transaction</button>
+            <button type="submit">
+                {transactionToEdit ? "Save changes" : "Add transaction"}
+            </button>
+
+            {transactionToEdit && (
+                <button type="button" onClick={onCancelEdit}>
+                    Cancel edit
+                </button>
+            )}
         </form>
     );
 }

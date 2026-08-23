@@ -47,6 +47,18 @@ function App() {
     ]);
   };
 
+  const handleUpdateTransaction = (updatedTransaction: Transaction) => {
+    setTransactionList((currentTransactions) =>
+      currentTransactions.map((transaction) =>
+        transaction.id === updatedTransaction.id
+          ? updatedTransaction
+          : transaction
+      )
+    );
+
+    setSelectedTransactionId(null);
+  };
+
   const handleDeleteTransaction = (id: string) => {
     setTransactionList((currentTransactions) =>
       currentTransactions.filter((transaction) => transaction.id !== id)
@@ -81,7 +93,13 @@ function App() {
         <p>Balance: {balance} €</p>
       </section>
 
-      <TransactionForm onAddTransaction={handleAddTransaction} />
+      <TransactionForm
+        key={selectedTransaction?.id ?? "new"}
+        onAddTransaction={handleAddTransaction}
+        onUpdateTransaction={handleUpdateTransaction}
+        transactionToEdit={selectedTransaction}
+        onCancelEdit={handleCancelEdit}
+      />
 
       <label htmlFor="transaction-filter">Filter by type</label>
 
@@ -108,19 +126,6 @@ function App() {
         onChange={(event) => setCategoryFilter(event.target.value)}
         placeholder="Category"
       />
-
-      {selectedTransaction && (
-        <section>
-          <p>Editing: {selectedTransaction.description}</p>
-
-          <button
-            type="button"
-            onClick={handleCancelEdit}
-          >
-            Cancel edit
-          </button>
-        </section>
-      )}
 
       <TransactionList
         transactions={filteredTransactions}
