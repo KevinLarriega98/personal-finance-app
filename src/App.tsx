@@ -1,4 +1,5 @@
 import { transactions } from "./data/transactions";
+import TransactionList from "./components/TransactionList";
 
 function App() {
   const totalIncome = transactions
@@ -29,27 +30,7 @@ function App() {
         </p>
       </section>
 
-      <ul>
-        {transactions.map((transaction) => (
-          <li key={transaction.id}>
-            <p>{transaction.description}</p>
-
-            <p
-              className={
-                transaction.type === "income"
-                  ? "text-green-600"
-                  : "text-red-600"
-              }
-            >
-              {transaction.amount} €
-            </p>
-
-            <p>{transaction.type}</p>
-            <p>{transaction.category}</p>
-            <p>{transaction.date}</p>
-          </li>
-        ))}
-      </ul>
+      <TransactionList transactions={transactions} />
     </main>
   );
 }
