@@ -1,5 +1,9 @@
 import { useState } from "react";
+
 import { transactions } from "./data/transactions";
+import type { Transaction } from "./types/transaction";
+
+import TransactionForm from "./components/TransactionForm";
 import TransactionList from "./components/TransactionList";
 
 function App() {
@@ -14,6 +18,13 @@ function App() {
     .reduce((total, transaction) => total + transaction.amount, 0);
 
   const balance = totalIncome - totalExpenses;
+
+  const handleAddTransaction = (transaction: Transaction) => {
+    setTransactionList((currentTransactions) => [
+      ...currentTransactions,
+      transaction,
+    ]);
+  };
 
   const handleDeleteTransaction = (id: string) => {
     setTransactionList((currentTransactions) =>
@@ -34,10 +45,10 @@ function App() {
           Total expenses: {totalExpenses} €
         </p>
 
-        <p>
-          Balance: {balance} €
-        </p>
+        <p>Balance: {balance} €</p>
       </section>
+
+      <TransactionForm onAddTransaction={handleAddTransaction} />
 
       <TransactionList
         transactions={transactionList}
