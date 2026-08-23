@@ -9,6 +9,7 @@ import TransactionList from "./components/TransactionList";
 function App() {
   const [transactionList, setTransactionList] = useState(transactions);
   const [filter, setFilter] = useState<"all" | "income" | "expense">("all");
+  const [categoryFilter, setCategoryFilter] = useState("");
 
   const totalIncome = transactionList
     .filter((transaction) => transaction.type === "income")
@@ -20,12 +21,16 @@ function App() {
 
   const balance = totalIncome - totalExpenses;
 
-  const filteredTransactions =
-    filter === "all"
-      ? transactionList
-      : transactionList.filter(
-        (transaction) => transaction.type === filter
-      );
+  const filteredTransactions = transactionList.filter((transaction) => {
+    const matchesType =
+      filter === "all" || transaction.type === filter;
+
+    const matchesCategory = transaction.category
+      .toLowerCase()
+      .includes(categoryFilter.toLowerCase());
+
+    return matchesType && matchesCategory;
+  });
 
   const handleAddTransaction = (transaction: Transaction) => {
     setTransactionList((currentTransactions) => [
@@ -73,6 +78,16 @@ function App() {
         <option value="income">Income</option>
         <option value="expense">Expense</option>
       </select>
+
+      <label htmlFor="category-filter">Filter by category</label>
+
+      <input
+        id="category-filter"
+        type="text"
+        value={categoryFilter}
+        onChange={(event) => setCategoryFilter(event.target.value)}
+        placeholder="Category"
+      />
 
       <TransactionList
         transactions={filteredTransactions}
