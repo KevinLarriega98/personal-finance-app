@@ -3,11 +3,13 @@ import type { Transaction } from "../types/transaction";
 type TransactionListProps = {
     transactions: Transaction[];
     onDelete: (id: string) => void;
+    onEdit: (id: string) => void;
 };
 
 function TransactionList({
     transactions,
     onDelete,
+    onEdit,
 }: TransactionListProps) {
     return (
         <ul>
@@ -28,6 +30,13 @@ function TransactionList({
                     <p>{transaction.type}</p>
                     <p>{transaction.category}</p>
                     <p>{transaction.date}</p>
+
+                    <button
+                        type="button"
+                        onClick={() => onEdit(transaction.id)}
+                    >
+                        Editar
+                    </button>
 
                     <button
                         type="button"

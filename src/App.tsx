@@ -10,6 +10,9 @@ function App() {
   const [transactionList, setTransactionList] = useState(transactions);
   const [filter, setFilter] = useState<"all" | "income" | "expense">("all");
   const [categoryFilter, setCategoryFilter] = useState("");
+  const [selectedTransactionId, setSelectedTransactionId] = useState<
+    string | null
+  >(null);
 
   const totalIncome = transactionList
     .filter((transaction) => transaction.type === "income")
@@ -32,6 +35,11 @@ function App() {
     return matchesType && matchesCategory;
   });
 
+  const selectedTransaction =
+    transactionList.find(
+      (transaction) => transaction.id === selectedTransactionId
+    ) ?? null;
+
   const handleAddTransaction = (transaction: Transaction) => {
     setTransactionList((currentTransactions) => [
       ...currentTransactions,
@@ -43,6 +51,18 @@ function App() {
     setTransactionList((currentTransactions) =>
       currentTransactions.filter((transaction) => transaction.id !== id)
     );
+
+    if (selectedTransactionId === id) {
+      setSelectedTransactionId(null);
+    }
+  };
+
+  const handleEditTransaction = (id: string) => {
+    setSelectedTransactionId(id);
+  };
+
+  const handleCancelEdit = () => {
+    setSelectedTransactionId(null);
   };
 
   return (
@@ -89,9 +109,23 @@ function App() {
         placeholder="Category"
       />
 
+      {selectedTransaction && (
+        <section>
+          <p>Editing: {selectedTransaction.description}</p>
+
+          <button
+            type="button"
+            onClick={handleCancelEdit}
+          >
+            Cancel edit
+          </button>
+        </section>
+      )}
+
       <TransactionList
         transactions={filteredTransactions}
         onDelete={handleDeleteTransaction}
+        onEdit={handleEditTransaction}
       />
     </main>
   );
