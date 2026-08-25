@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 
-import { transactions } from "./data/transactions";
 import type { Transaction } from "./types/transaction";
 
 import TransactionForm from "./components/TransactionForm";
@@ -30,7 +29,9 @@ function App() {
       ? "dark"
       : "light";
   });
-  const [transactionList, setTransactionList] = useState(transactions);
+  const [transactionList, setTransactionList] = useState<Transaction[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "income" | "expense">("all");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [selectedTransactionId, setSelectedTransactionId] = useState<
@@ -41,6 +42,41 @@ function App() {
     document.documentElement.classList.toggle("dark", theme === "dark");
     localStorage.setItem("theme", theme);
   }, [theme]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const loadTransactions = async () => {
+      try {
+        const response = await fetch("/api/transactions", {
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          throw new Error("Unable to load transactions");
+        }
+
+        const data = (await response.json()) as Transaction[];
+        setTransactionList(data);
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") {
+          return;
+        }
+
+        setLoadError("Unable to load transactions.");
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    void loadTransactions();
+
+    return () => {
+      controller.abort();
+    };
+  }, []);
 
   const totalIncome = transactionList
     .filter((transaction) => transaction.type === "income")
@@ -235,11 +271,31 @@ function App() {
             </div>
 
             <div className="mt-6 overflow-x-hidden lg:max-h-[60vh] lg:overflow-y-auto">
-              <TransactionList
-                transactions={filteredTransactions}
-                onDelete={handleDeleteTransaction}
-                onEdit={handleEditTransaction}
-              />
+              {isLoading ? (
+                <div
+                  role="status"
+                  className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center dark:border-slate-700 dark:bg-slate-950"
+                >
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                    Loading transactions...
+                  </p>
+                </div>
+              ) : loadError ? (
+                <div
+                  role="alert"
+                  className="rounded-xl border border-dashed border-rose-300 bg-rose-50 px-6 py-12 text-center dark:border-rose-900 dark:bg-rose-950/50"
+                >
+                  <p className="text-sm font-medium text-rose-700 dark:text-rose-300">
+                    {loadError}
+                  </p>
+                </div>
+              ) : (
+                <TransactionList
+                  transactions={filteredTransactions}
+                  onDelete={handleDeleteTransaction}
+                  onEdit={handleEditTransaction}
+                />
+              )}
             </div>
           </section>
         </div>
