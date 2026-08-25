@@ -3,8 +3,10 @@ import type { Transaction } from "../types/transaction";
 import Select from "./ui/Select";
 
 type TransactionFormProps = {
-    onAddTransaction: (transaction: Transaction) => void;
-    onUpdateTransaction: (transaction: Transaction) => void;
+    onAddTransaction: (
+        transaction: Omit<Transaction, "id">
+    ) => Promise<boolean>;
+    onUpdateTransaction: (transaction: Transaction) => Promise<boolean>;
     transactionToEdit: Transaction | null;
     onCancelEdit: () => void;
 };
@@ -63,7 +65,7 @@ function TransactionForm({
         transactionToEdit?.date ?? ""
     );
 
-    const handleSubmit = (event: SubmitEvent<HTMLFormElement>) => {
+    const handleSubmit = async (event: SubmitEvent<HTMLFormElement>) => {
         event.preventDefault();
 
         const numericAmount = Number(amount);
@@ -98,10 +100,13 @@ function TransactionForm({
                 date: normalizedDate,
             };
 
-            onUpdateTransaction(updatedTransaction);
+            const wasUpdated = await onUpdateTransaction(updatedTransaction);
+
+            if (!wasUpdated) {
+                return;
+            }
         } else {
-            const newTransaction: Transaction = {
-                id: crypto.randomUUID(),
+            const newTransaction: Omit<Transaction, "id"> = {
                 description: trimmedDescription,
                 amount: numericAmount,
                 type,
@@ -109,7 +114,11 @@ function TransactionForm({
                 date: normalizedDate,
             };
 
-            onAddTransaction(newTransaction);
+            const wasAdded = await onAddTransaction(newTransaction);
+
+            if (!wasAdded) {
+                return;
+            }
         }
 
         setDescription("");

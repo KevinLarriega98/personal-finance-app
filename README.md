@@ -8,6 +8,8 @@ A responsive personal finance dashboard for tracking income, expenses, balance, 
 - TypeScript
 - Tailwind CSS
 - Vite
+- Node.js
+- Express
 
 ## MVP features
 
@@ -23,11 +25,19 @@ npm install
 npm run dev
 ```
 
+Run the API in a second terminal:
+
+```bash
+npm run server:dev
+```
+
 To check the project:
 
 ```bash
 npm run lint
 npm run build
+npm run server:check
 ```
 
-The application currently uses local mock data and does not persist changes between page reloads.
+The API stores mock transactions in memory. Changes persist while Express is
+running and reset to the initial data when the server restarts.

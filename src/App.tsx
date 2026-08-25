@@ -32,6 +32,7 @@ function App() {
   const [transactionList, setTransactionList] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "income" | "expense">("all");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [selectedTransactionId, setSelectedTransactionId] = useState<
@@ -88,48 +89,113 @@ function App() {
 
   const balance = totalIncome - totalExpenses;
 
-  const filteredTransactions = transactionList.filter((transaction) => {
-    const matchesType =
-      filter === "all" || transaction.type === filter;
+  const filteredTransactions = transactionList
+    .filter((transaction) => {
+      const matchesType =
+        filter === "all" || transaction.type === filter;
 
-    const matchesCategory = transaction.category
-      .toLowerCase()
-      .includes(categoryFilter.toLowerCase());
+      const matchesCategory = transaction.category
+        .toLowerCase()
+        .includes(categoryFilter.toLowerCase());
 
-    return matchesType && matchesCategory;
-  });
+      return matchesType && matchesCategory;
+    })
+    .toSorted((firstTransaction, secondTransaction) =>
+      secondTransaction.date.localeCompare(firstTransaction.date)
+    );
 
   const selectedTransaction =
     transactionList.find(
       (transaction) => transaction.id === selectedTransactionId
     ) ?? null;
 
-  const handleAddTransaction = (transaction: Transaction) => {
-    setTransactionList((currentTransactions) => [
-      ...currentTransactions,
-      transaction,
-    ]);
+  const handleAddTransaction = async (
+    transaction: Omit<Transaction, "id">
+  ) => {
+    setActionError(null);
+
+    try {
+      const response = await fetch("/api/transactions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(transaction),
+      });
+
+      if (!response.ok) {
+        throw new Error("Unable to add transaction");
+      }
+
+      const createdTransaction = (await response.json()) as Transaction;
+      setTransactionList((currentTransactions) => [
+        ...currentTransactions,
+        createdTransaction,
+      ]);
+      return true;
+    } catch {
+      setActionError("Unable to add transaction.");
+      return false;
+    }
   };
 
-  const handleUpdateTransaction = (updatedTransaction: Transaction) => {
-    setTransactionList((currentTransactions) =>
-      currentTransactions.map((transaction) =>
-        transaction.id === updatedTransaction.id
-          ? updatedTransaction
-          : transaction
-      )
-    );
+  const handleUpdateTransaction = async (
+    updatedTransaction: Transaction
+  ) => {
+    setActionError(null);
+    const { id, ...transactionData } = updatedTransaction;
 
-    setSelectedTransactionId(null);
-  };
+    try {
+      const response = await fetch(`/api/transactions/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(transactionData),
+      });
 
-  const handleDeleteTransaction = (id: string) => {
-    setTransactionList((currentTransactions) =>
-      currentTransactions.filter((transaction) => transaction.id !== id)
-    );
+      if (!response.ok) {
+        throw new Error("Unable to update transaction");
+      }
 
-    if (selectedTransactionId === id) {
+      const savedTransaction = (await response.json()) as Transaction;
+      setTransactionList((currentTransactions) =>
+        currentTransactions.map((transaction) =>
+          transaction.id === savedTransaction.id
+            ? savedTransaction
+            : transaction
+        )
+      );
+
       setSelectedTransactionId(null);
+      return true;
+    } catch {
+      setActionError("Unable to update transaction.");
+      return false;
+    }
+  };
+
+  const handleDeleteTransaction = async (id: string) => {
+    setActionError(null);
+
+    try {
+      const response = await fetch(`/api/transactions/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Unable to delete transaction");
+      }
+
+      setTransactionList((currentTransactions) =>
+        currentTransactions.filter((transaction) => transaction.id !== id)
+      );
+
+      if (selectedTransactionId === id) {
+        setSelectedTransactionId(null);
+      }
+    } catch {
+      setActionError("Unable to delete transaction.");
     }
   };
 
@@ -207,6 +273,15 @@ function App() {
         </section>
 
         <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:items-start">
+          {actionError && (
+            <div
+              role="alert"
+              className="rounded-xl border border-rose-300 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700 dark:border-rose-900 dark:bg-rose-950/50 dark:text-rose-300 lg:col-span-2"
+            >
+              {actionError}
+            </div>
+          )}
+
           <div className="min-w-0">
             <TransactionForm
               key={selectedTransaction?.id ?? "new"}
