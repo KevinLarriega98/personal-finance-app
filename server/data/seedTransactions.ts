@@ -1,6 +1,6 @@
 import type { Transaction } from "../types/transaction.js";
 
-export const transactions: Transaction[] = [
+export const seedTransactions: Transaction[] = [
   {
     id: "1",
     description: "Salary",
